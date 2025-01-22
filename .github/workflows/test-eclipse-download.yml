@@ -1,44 +1,35 @@
-name: Test Eclipse Updates Site
+name: Test Eclipse Updates Site with External DNS Check
 
 on:
-  # Trigger on every push to the repository
   push:
     branches:
       - main
-        #
-  # Schedule the workflow to run every day at 6:00 AM UTC
   schedule:
-    - cron: "0 6 * * *"  # This follows the CRON syntax: minute, hour, day of the month, month, day of the week
-
-  workflow_dispatch:  # Allow manual triggering if needed
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 jobs:
   test-download:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code (optional, if needed)
-        uses: actions/checkout@v3
-
       - name: Install Required Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y dnsutils curl
+          sudo apt-get install -y curl
 
-      - name: Check DNS Resolution
+      - name: Check DNS Using Google DNS API
         run: |
-          echo "Resolving DNS for download.eclipse.org..."
-          nslookup download.eclipse.org
-          echo "Resolving DNS for its IP..."
-          dig +trace download.eclipse.org
+          echo "Checking DNS resolution using Google DNS API..."
+          curl -s "https://dns.google/resolve?name=download.eclipse.org" | jq
+
+      - name: Check DNS Using Cloudflare DNS API
+        run: |
+          echo "Checking DNS resolution using Cloudflare DNS API..."
+          curl -s "https://cloudflare-dns.com/dns-query?name=download.eclipse.org&type=A" -H "accept: application/dns-json" | jq
 
       - name: Perform HTTP GET Request with Timing
         run: |
           echo "Testing HTTP request to https://download.eclipse.org/eclipse/updates/4.35-I-builds..."
           curl -v -o /dev/null -s -w "DNS Lookup: %{time_namelookup}s\nConnect: %{time_connect}s\nStart Transfer: %{time_starttransfer}s\nTotal Time: %{time_total}s\n" https://download.eclipse.org/eclipse/updates/4.35-I-builds
-
-      - name: Debug Headers and Response
-        run: |
-          echo "Fetching headers and detailed debugging..."
-  
 
