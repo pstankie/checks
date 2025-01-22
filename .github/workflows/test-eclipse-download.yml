@@ -1,6 +1,11 @@
 name: Test Eclipse Updates Site
 
 on:
+  # Trigger on every push to the repository
+  push:
+    branches:
+      - main
+        #
   # Schedule the workflow to run every day at 6:00 AM UTC
   schedule:
     - cron: "0 6 * * *"  # This follows the CRON syntax: minute, hour, day of the month, month, day of the week
