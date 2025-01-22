@@ -1,0 +1,39 @@
+name: Test Eclipse Updates Site
+
+on:
+  # Schedule the workflow to run every day at 6:00 AM UTC
+  schedule:
+    - cron: "0 6 * * *"  # This follows the CRON syntax: minute, hour, day of the month, month, day of the week
+
+  workflow_dispatch:  # Allow manual triggering if needed
+
+jobs:
+  test-download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code (optional, if needed)
+        uses: actions/checkout@v3
+
+      - name: Install Required Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dnsutils curl
+
+      - name: Check DNS Resolution
+        run: |
+          echo "Resolving DNS for download.eclipse.org..."
+          nslookup download.eclipse.org
+          echo "Resolving DNS for its IP..."
+          dig +trace download.eclipse.org
+
+      - name: Perform HTTP GET Request with Timing
+        run: |
+          echo "Testing HTTP request to https://download.eclipse.org/eclipse/updates/4.35-I-builds..."
+          curl -v -o /dev/null -s -w "DNS Lookup: %{time_namelookup}s\nConnect: %{time_connect}s\nStart Transfer: %{time_starttransfer}s\nTotal Time: %{time_total}s\n" https://download.eclipse.org/eclipse/updates/4.35-I-builds
+
+      - name: Debug Headers and Response
+        run: |
+          echo "Fetching headers and detailed debugging..."
+  
+
